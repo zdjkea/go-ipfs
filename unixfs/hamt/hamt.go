@@ -83,7 +83,7 @@ func NewHamtFromDag(dserv dag.DAGService, nd node.Node) (*HamtShard, error) {
 	}
 
 	ds := makeHamtShard(dserv, int(pbd.GetFanout()))
-	ds.nd = pbnd.Copy()
+	ds.nd = pbnd.Copy().(*dag.ProtoNode)
 	ds.children = make([]child, len(pbnd.Links()))
 	ds.bitfield = new(big.Int).SetBytes(pbd.GetData())
 	ds.hashFunc = pbd.GetHashType()
@@ -321,7 +321,15 @@ func (ds *HamtShard) getValue(ctx context.Context, hv *hashBits, key string, cb 
 
 func (ds *HamtShard) EnumLinks() ([]*node.Link, error) {
 	var links []*node.Link
-	err := ds.walkTrie(func(sv *shardValue) error {
+	err := ds.ForEachLink(func(l *node.Link) error {
+		links = append(links, l)
+		return nil
+	})
+	return links, err
+}
+
+func (ds *HamtShard) ForEachLink(f func(*node.Link) error) error {
+	return ds.walkTrie(func(sv *shardValue) error {
 		lnk, err := node.MakeLink(sv.val)
 		if err != nil {
 			return err
@@ -329,14 +337,8 @@ func (ds *HamtShard) EnumLinks() ([]*node.Link, error) {
 
 		lnk.Name = sv.key
 
-		links = append(links, lnk)
-		return nil
+		return f(lnk)
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return links, nil
 }
 
 func (ds *HamtShard) walkTrie(cb func(*shardValue) error) error {

@@ -10,7 +10,6 @@ import (
 	hamt "github.com/ipfs/go-ipfs/unixfs/hamt"
 
 	node "gx/ipfs/QmUsVJ7AEnGyjX8YWnrwq9vmECVGwBQNAKPpgz5KSg8dcq/go-ipld-node"
-	cid "gx/ipfs/QmcEcrBAMrwMyhSjXt4yfyPpzgSuV8HLHavnfmiKCSRqZU/go-cid"
 )
 
 // ShardSplitThreshold specifies how large of an unsharded directory
@@ -51,7 +50,7 @@ func NewDirectoryFromNode(dserv mdag.DAGService, nd node.Node) (*Directory, erro
 	case format.TDirectory:
 		return &Directory{
 			dserv:   dserv,
-			dirnode: pbnd.Copy(),
+			dirnode: pbnd.Copy().(*mdag.ProtoNode),
 		}, nil
 	case format.THAMTShard:
 		shard, err := hamt.NewHamtFromDag(dserv, nd)
@@ -101,6 +100,19 @@ func (d *Directory) switchToSharding(ctx context.Context) error {
 
 	d.dirnode = nil
 	return nil
+}
+
+func (d *Directory) ForEachLink(f func(*node.Link) error) error {
+	if d.shard == nil {
+		for _, l := range d.dirnode.Links() {
+			if err := f(l); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return d.shard.ForEachLink(f)
 }
 
 func (d *Directory) Links() ([]*node.Link, error) {
