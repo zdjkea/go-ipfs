@@ -293,6 +293,12 @@
       "hash": "QmXuBJ7DR6k3rmUEKtvVMhwjmXDuJgXXPUt4LQXKBMsU93",
       "name": "go-os-helper",
       "version": "0.0.0"
+    },
+    {
+      "author": "blang",
+      "hash": "QmU1N5xVAUXgo3XRTt6GhJ2SuJEbxj2zRgMS7FpjSR2U83",
+      "name": "semver",
+      "version": "3.3.0"
     }
   ],
   "gxVersion": "0.4.0",
@@ -301,3 +307,4 @@
   "name": "go-ipfs",
   "version": "0.4.5-dev"
 }
+
