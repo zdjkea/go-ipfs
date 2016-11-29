@@ -4,18 +4,16 @@ IPFS_MIN_GX_VERSION = 0.6
 IPFS_MIN_GX_GO_VERSION = 1.1
 
 ifneq ($(COVER_TOKEN),)
-covertools_rule = covertools
-go_test_bin = $(GOPATH)/bin/goveralls -repotoken $(COVER_TOKEN)
+  covertools_rule = covertools
+  go_test_flags += -covermode=count -coverprofile=coverage.out
 else
-covertools_rule = $()
-go_test_bin = go test
+  covertools_rule = $()
 endif
 
 ifeq ($(TEST_NO_FUSE),1)
-  go_test=IPFS_REUSEPORT=false $(go_test_bin) -tags nofuse
-else
-  go_test=IPFS_REUSEPORT=false $(go_test_bin)
+  go_test_flags += -tags nofuse
 endif
+go_test=IPFS_REUSEPORT=false go test $(go_test_flags)
 
 ifeq ($(OS),Windows_NT)
   GOPATH_DELIMITER = ;
