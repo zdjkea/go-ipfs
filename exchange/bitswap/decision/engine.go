@@ -295,8 +295,24 @@ func (e *Engine) MessageSent(p peer.ID, m bsmsg.BitSwapMessage) error {
 	return nil
 }
 
+func (e *Engine) PeerConnected(p peer.ID) {
+	l := e.findOrCreate(p)
+	l.lk.Lock()
+	l.ref++
+	l.lk.Unlock()
+}
+
 func (e *Engine) PeerDisconnected(p peer.ID) {
-	// TODO: release ledger
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	l, ok := e.ledgerMap[p]
+	if !ok {
+		return
+	}
+	l.ref--
+	if l.ref <= 0 {
+		delete(e.ledgerMap, p)
+	}
 }
 
 func (e *Engine) numBytesSentTo(p peer.ID) uint64 {
