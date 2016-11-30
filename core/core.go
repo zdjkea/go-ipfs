@@ -220,13 +220,18 @@ func (n *IpfsNode) startOnlineServices(ctx context.Context, routingOption Routin
 func makeSmuxTransport(mplexExp bool) smux.Transport {
 	mstpt := mssmux.NewBlankTransport()
 
+	yamuxLogOut := ioutil.Discard
+	if ylg := os.Getenv("YAMUX_LOGGING"); ylg != "" {
+		yamuxLogOut = os.Stderr
+	}
+
 	ymxtpt := &yamux.Transport{
 		AcceptBacklog:          8192,
 		ConnectionWriteTimeout: time.Second * 10,
 		KeepAliveInterval:      time.Second * 30,
 		EnableKeepAlive:        true,
 		MaxStreamWindowSize:    uint32(1024 * 512),
-		LogOutput:              ioutil.Discard,
+		LogOutput:              yamuxLogOut,
 	}
 
 	mstpt.AddTransport("/yamux/1.0.0", ymxtpt)
